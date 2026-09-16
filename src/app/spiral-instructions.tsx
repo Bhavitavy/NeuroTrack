@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import SensorWaveform from '../components/SensorWaveform';
+import Svg, { Path, Circle } from 'react-native-svg';
 
 const COLORS = {
     bg: '#080B0D',
@@ -17,22 +17,46 @@ const COLORS = {
 const STEPS = [
     {
         num: '01',
-        title: 'DOMINANT HAND',
-        body: 'Hold the phone naturally in your dominant hand.',
+        title: 'START AT CENTER',
+        body: 'Begin at the marked center point.',
     },
     {
         num: '02',
-        title: 'CHEST HEIGHT',
-        body: 'Keep the device stable at approximately chest level.',
+        title: 'FOLLOW THE LINE',
+        body: 'Trace outward without lifting your finger.',
     },
     {
         num: '03',
-        title: '10 SECOND CAPTURE',
-        body: 'Remain as still and relaxed as possible during recording.',
+        title: 'STAY SMOOTH',
+        body: 'Move naturally and avoid sudden corrections or stops.',
     },
 ];
 
-export default function MotionInstructionsScreen() {
+// Builds an Archimedean spiral path string for a decorative/technical
+// calibration-pattern graphic. Not connected to any real trace data.
+function buildSpiralPath(
+    cx: number,
+    cy: number,
+    startRadius: number,
+    radiusStep: number,
+    turns: number,
+    pointsPerTurn = 40
+): string {
+    const total = turns * pointsPerTurn;
+    let d = '';
+    for (let i = 0; i <= total; i++) {
+        const angle = (i / pointsPerTurn) * Math.PI * 2;
+        const radius = startRadius + radiusStep * (angle / (Math.PI * 2));
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+        d += i === 0 ? `M${x},${y}` : ` L${x},${y}`;
+    }
+    return d;
+}
+
+const SPIRAL_PATH = buildSpiralPath(60, 60, 2, 8, 3.2);
+
+export default function SpiralInstructionsScreen() {
     const router = useRouter();
 
     return (
@@ -46,30 +70,28 @@ export default function MotionInstructionsScreen() {
                     <Pressable onPress={() => router.back()} hitSlop={12}>
                         <Text style={styles.backArrow}>←</Text>
                     </Pressable>
-                    <Text style={styles.testLabel}>TEST 01 / 03</Text>
+                    <Text style={styles.testLabel}>TEST 02 / 03</Text>
                     <View style={styles.statusPill}>
                         <View style={[styles.dot, { backgroundColor: COLORS.green }]} />
                         <Text style={styles.statusText}>READY</Text>
                     </View>
                 </View>
 
+                <Text style={styles.category}>COORDINATION ASSESSMENT</Text>
+
                 {/* MAIN HEADING */}
                 <View style={styles.heroBlock}>
-                    <Text style={styles.heroLine}>MOTION</Text>
-                    <Text style={[styles.heroLine, styles.heroLineAccent]}>
-                        CAPTURE
-                    </Text>
+                    <Text style={styles.heroLine}>SPIRAL</Text>
+                    <Text style={[styles.heroLine, styles.heroLineAccent]}>TRACE</Text>
                 </View>
 
-                {/* EDITORIAL LINE */}
                 <Text style={styles.editorial}>
-                    HOLD STEADY.{'\n'}LET THE SIGNAL{'\n'}SPEAK.
+                    TRACE THE PATH.{'\n'}KEEP IT SMOOTH.
                 </Text>
 
-                {/* SUPPORTING TEXT */}
                 <Text style={styles.supporting}>
-                    Keep your phone steady in your dominant hand at chest height. Relax
-                    your grip and avoid sudden compensatory movements.
+                    Place your finger at the center of the spiral and trace outward in
+                    one continuous, controlled motion.
                 </Text>
 
                 {/* PREPARATION STEPS */}
@@ -88,15 +110,28 @@ export default function MotionInstructionsScreen() {
                 ))}
                 <View style={styles.divider} />
 
-                {/* WAVEFORM ACCENT */}
-                <View style={styles.waveformBlock}>
-                    <SensorWaveform height={40} strokeWidth={1} showBaseline />
+                {/* SPIRAL CALIBRATION GRAPHIC */}
+                <View style={styles.spiralBlock}>
+                    <Svg width={120} height={120} viewBox="0 0 120 120">
+                        <Circle
+                            cx={60}
+                            cy={60}
+                            r={2}
+                            fill={COLORS.cyan}
+                        />
+                        <Path
+                            d={SPIRAL_PATH}
+                            stroke={COLORS.cyan}
+                            strokeWidth={1}
+                            fill="none"
+                        />
+                    </Svg>
                 </View>
 
                 {/* METADATA */}
                 <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>ACCELEROMETER + GYROSCOPE</Text>
-                    <Text style={styles.metaText}>10.0 SEC RECORDING</Text>
+                    <Text style={styles.metaText}>TOUCH TRAJECTORY</Text>
+                    <Text style={styles.metaText}>10.0 SEC CAPTURE</Text>
                 </View>
 
                 {/* CTA */}
@@ -105,13 +140,13 @@ export default function MotionInstructionsScreen() {
                         styles.ctaButton,
                         pressed && styles.ctaButtonPressed,
                     ]}
-                    onPress={() => router.push('/motion-active')}
+                    onPress={() => router.push('/spiral-active')}
                 >
-                    <Text style={styles.ctaText}>START DETECTION</Text>
+                    <Text style={styles.ctaText}>START SPIRAL TEST</Text>
                     <Text style={styles.ctaArrow}>→</Text>
                 </Pressable>
                 <Text style={styles.permissionNote}>
-                    Sensor permission may be requested.
+                    Keep your finger on the screen throughout the trace.
                 </Text>
 
                 <Pressable onPress={() => router.back()} style={styles.cancelButton}>
@@ -133,7 +168,7 @@ const styles = StyleSheet.create({
     topRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 22,
+        marginBottom: 8,
     },
     backArrow: {
         fontSize: 18,
@@ -161,6 +196,14 @@ const styles = StyleSheet.create({
         width: 5,
         height: 5,
         borderRadius: 2.5,
+    },
+
+    category: {
+        fontSize: 9,
+        letterSpacing: 1,
+        color: COLORS.cyan,
+        marginBottom: 14,
+        textTransform: 'uppercase',
     },
 
     heroBlock: { marginBottom: 14 },
@@ -222,9 +265,10 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
     },
 
-    waveformBlock: {
-        marginTop: 20,
-        marginBottom: 10,
+    spiralBlock: {
+        alignItems: 'center',
+        marginTop: 22,
+        marginBottom: 14,
     },
 
     metaRow: {
@@ -248,9 +292,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    ctaButtonPressed: {
-        opacity: 0.85,
-    },
+    ctaButtonPressed: { opacity: 0.85 },
     ctaText: {
         fontSize: 12,
         fontWeight: '700',
@@ -272,9 +314,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 
-    cancelButton: {
-        alignItems: 'center',
-    },
+    cancelButton: { alignItems: 'center' },
     cancelText: {
         fontSize: 9,
         letterSpacing: 0.8,

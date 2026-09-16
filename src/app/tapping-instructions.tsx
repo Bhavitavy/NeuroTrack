@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import SensorWaveform from '../components/SensorWaveform';
 
 const COLORS = {
     bg: '#080B0D',
@@ -17,22 +16,26 @@ const COLORS = {
 const STEPS = [
     {
         num: '01',
-        title: 'DOMINANT HAND',
-        body: 'Hold the phone naturally in your dominant hand.',
+        title: 'ONE FINGER',
+        body: 'Use one finger and tap the target cleanly.',
     },
     {
         num: '02',
-        title: 'CHEST HEIGHT',
-        body: 'Keep the device stable at approximately chest level.',
+        title: 'NATURAL PACE',
+        body: 'Choose a comfortable rhythm rather than tapping as quickly as possible.',
     },
     {
         num: '03',
-        title: '10 SECOND CAPTURE',
-        body: 'Remain as still and relaxed as possible during recording.',
+        title: 'STAY CONSISTENT',
+        body: 'Maintain your rhythm for the duration of the test.',
     },
 ];
 
-export default function MotionInstructionsScreen() {
+// Static tick pattern for the rhythmic instrument visual — purely
+// decorative, mimics an interval readout without any real data.
+const TICK_HEIGHTS = [6, 10, 6, 14, 6, 10, 6, 14, 6, 10, 6];
+
+export default function TappingInstructionsScreen() {
     const router = useRouter();
 
     return (
@@ -41,38 +44,33 @@ export default function MotionInstructionsScreen() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* TOP BAR */}
                 <View style={styles.topRow}>
                     <Pressable onPress={() => router.back()} hitSlop={12}>
                         <Text style={styles.backArrow}>←</Text>
                     </Pressable>
-                    <Text style={styles.testLabel}>TEST 01 / 03</Text>
+                    <Text style={styles.testLabel}>TEST 03 / 03</Text>
                     <View style={styles.statusPill}>
                         <View style={[styles.dot, { backgroundColor: COLORS.green }]} />
                         <Text style={styles.statusText}>READY</Text>
                     </View>
                 </View>
 
-                {/* MAIN HEADING */}
+                <Text style={styles.category}>INTERVAL CADENCE ASSESSMENT</Text>
+
                 <View style={styles.heroBlock}>
-                    <Text style={styles.heroLine}>MOTION</Text>
-                    <Text style={[styles.heroLine, styles.heroLineAccent]}>
-                        CAPTURE
-                    </Text>
+                    <Text style={styles.heroLine}>TAPPING</Text>
+                    <Text style={[styles.heroLine, styles.heroLineAccent]}>TEST</Text>
                 </View>
 
-                {/* EDITORIAL LINE */}
                 <Text style={styles.editorial}>
-                    HOLD STEADY.{'\n'}LET THE SIGNAL{'\n'}SPEAK.
+                    FIND YOUR{'\n'}NATURAL{'\n'}RHYTHM.
                 </Text>
 
-                {/* SUPPORTING TEXT */}
                 <Text style={styles.supporting}>
-                    Keep your phone steady in your dominant hand at chest height. Relax
-                    your grip and avoid sudden compensatory movements.
+                    Tap the target with your finger at a comfortable, consistent pace.
+                    Do not force a faster rhythm.
                 </Text>
 
-                {/* PREPARATION STEPS */}
                 <View style={styles.divider} />
                 {STEPS.map((step, i) => (
                     <View key={step.num}>
@@ -88,30 +86,38 @@ export default function MotionInstructionsScreen() {
                 ))}
                 <View style={styles.divider} />
 
-                {/* WAVEFORM ACCENT */}
-                <View style={styles.waveformBlock}>
-                    <SensorWaveform height={40} strokeWidth={1} showBaseline />
+                {/* rhythmic tick visualization */}
+                <View style={styles.tickBlock}>
+                    {TICK_HEIGHTS.map((h, i) => (
+                        <View
+                            key={i}
+                            style={[
+                                styles.tick,
+                                { height: h },
+                                i % 4 === 3 && styles.tickAccent,
+                            ]}
+                        />
+                    ))}
                 </View>
 
-                {/* METADATA */}
                 <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>ACCELEROMETER + GYROSCOPE</Text>
-                    <Text style={styles.metaText}>10.0 SEC RECORDING</Text>
+                    <Text style={styles.metaText}>TOUCH INTERVALS</Text>
+                    <Text style={styles.metaText}>20.0 SEC CAPTURE</Text>
+                    <Text style={styles.metaText}>CADENCE ANALYSIS</Text>
                 </View>
 
-                {/* CTA */}
                 <Pressable
                     style={({ pressed }) => [
                         styles.ctaButton,
                         pressed && styles.ctaButtonPressed,
                     ]}
-                    onPress={() => router.push('/motion-active')}
+                    onPress={() => router.push('/tapping-active')}
                 >
-                    <Text style={styles.ctaText}>START DETECTION</Text>
+                    <Text style={styles.ctaText}>START TAPPING TEST</Text>
                     <Text style={styles.ctaArrow}>→</Text>
                 </Pressable>
                 <Text style={styles.permissionNote}>
-                    Sensor permission may be requested.
+                    Tap naturally. The test will complete automatically.
                 </Text>
 
                 <Pressable onPress={() => router.back()} style={styles.cancelButton}>
@@ -124,22 +130,9 @@ export default function MotionInstructionsScreen() {
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: COLORS.bg },
-    scrollContent: {
-        paddingHorizontal: 20,
-        paddingTop: 8,
-        paddingBottom: 30,
-    },
-
-    topRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 22,
-    },
-    backArrow: {
-        fontSize: 18,
-        color: COLORS.textPrimary,
-        marginRight: 12,
-    },
+    scrollContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 30 },
+    topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+    backArrow: { fontSize: 18, color: COLORS.textPrimary, marginRight: 12 },
     testLabel: {
         flex: 1,
         fontSize: 9,
@@ -147,22 +140,16 @@ const styles = StyleSheet.create({
         color: COLORS.textDim,
         textTransform: 'uppercase',
     },
-    statusPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-    },
-    statusText: {
+    statusPill: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    statusText: { fontSize: 9, letterSpacing: 0.6, color: COLORS.green },
+    dot: { width: 5, height: 5, borderRadius: 2.5 },
+    category: {
         fontSize: 9,
-        letterSpacing: 0.6,
-        color: COLORS.green,
+        letterSpacing: 1,
+        color: COLORS.cyan,
+        marginBottom: 14,
+        textTransform: 'uppercase',
     },
-    dot: {
-        width: 5,
-        height: 5,
-        borderRadius: 2.5,
-    },
-
     heroBlock: { marginBottom: 14 },
     heroLine: {
         fontFamily: 'serif',
@@ -174,7 +161,6 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     heroLineAccent: { color: '#E8F4F2' },
-
     editorial: {
         fontFamily: 'serif',
         fontSize: 19,
@@ -183,24 +169,14 @@ const styles = StyleSheet.create({
         marginBottom: 14,
         textTransform: 'uppercase',
     },
-
     supporting: {
         fontSize: 11,
         lineHeight: 17,
         color: COLORS.textSecondary,
         marginBottom: 8,
     },
-
-    divider: {
-        height: 1,
-        backgroundColor: COLORS.border,
-    },
-
-    stepRow: {
-        flexDirection: 'row',
-        paddingVertical: 16,
-        gap: 14,
-    },
+    divider: { height: 1, backgroundColor: COLORS.border },
+    stepRow: { flexDirection: 'row', paddingVertical: 16, gap: 14 },
     stepNumber: {
         fontFamily: 'serif',
         fontSize: 24,
@@ -216,17 +192,17 @@ const styles = StyleSheet.create({
         marginBottom: 4,
         textTransform: 'uppercase',
     },
-    stepDesc: {
-        fontSize: 11,
-        lineHeight: 16,
-        color: COLORS.textSecondary,
+    stepDesc: { fontSize: 11, lineHeight: 16, color: COLORS.textSecondary },
+    tickBlock: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        gap: 6,
+        marginTop: 22,
+        marginBottom: 14,
+        justifyContent: 'center',
     },
-
-    waveformBlock: {
-        marginTop: 20,
-        marginBottom: 10,
-    },
-
+    tick: { width: 2, backgroundColor: COLORS.textDim, borderRadius: 1 },
+    tickAccent: { backgroundColor: COLORS.cyan },
     metaRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -238,7 +214,6 @@ const styles = StyleSheet.create({
         color: COLORS.textDim,
         textTransform: 'uppercase',
     },
-
     ctaButton: {
         backgroundColor: COLORS.cyan,
         borderRadius: 3,
@@ -248,9 +223,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    ctaButtonPressed: {
-        opacity: 0.85,
-    },
+    ctaButtonPressed: { opacity: 0.85 },
     ctaText: {
         fontSize: 12,
         fontWeight: '700',
@@ -258,12 +231,7 @@ const styles = StyleSheet.create({
         color: '#080B0D',
         textTransform: 'uppercase',
     },
-    ctaArrow: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#080B0D',
-    },
-
+    ctaArrow: { fontSize: 15, fontWeight: '700', color: '#080B0D' },
     permissionNote: {
         fontSize: 9,
         color: COLORS.textDim,
@@ -271,10 +239,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: 20,
     },
-
-    cancelButton: {
-        alignItems: 'center',
-    },
+    cancelButton: { alignItems: 'center' },
     cancelText: {
         fontSize: 9,
         letterSpacing: 0.8,
